@@ -38,5 +38,13 @@
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENDRkVGRDg5MDBENTY3NzEKUldSeFo5VUFpZjMrek9QRk0yOW9xTk5kaUg5NDc4VkVrckllSnV2VW9raHZQbUpleklsOTExQTMK",
+      "endpoints": [
+        "https://github.com/minhduc2001/webhook-lab/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

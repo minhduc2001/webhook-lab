@@ -10,6 +10,8 @@ target/
 *.exe
 *.msi
 *.pdb
+*.key
+*.key.pub
 
 # Local database files
 *.db

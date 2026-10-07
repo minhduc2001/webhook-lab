@@ -11,6 +11,7 @@
   import ReplayModal from './components/ReplayModal.svelte';
   import InstallTunnelModal from './components/InstallTunnelModal.svelte';
   import ApiForwarderModal from './components/ApiForwarderModal.svelte';
+  import AboutModal from './components/AboutModal.svelte';
 
   // Core application state
   let endpoints = $state<Endpoint[]>([]);
@@ -30,6 +31,9 @@
 
   let forwarders = $state<ApiForwarder[]>([]);
   let isForwarderModalOpen = $state(false);
+
+  let appVersion = $state('0.1.0');
+  let isAboutModalOpen = $state(false);
 
   let serverStatus = $state<ServerStatus>({
     is_running: true,
@@ -111,12 +115,13 @@
 
   async function loadInitialData() {
     try {
-      const [eps, reqs, sStatus, tStatus, fwds] = await Promise.all([
+      const [eps, reqs, sStatus, tStatus, fwds, ver] = await Promise.all([
         api.getEndpoints(),
         api.getRequests(),
         api.getServerStatus(),
         api.getTunnelStatus(),
         api.getApiForwarders(),
+        api.getAppVersion(),
       ]);
 
       endpoints = eps;
@@ -124,6 +129,7 @@
       serverStatus = sStatus;
       tunnelStatus = tStatus;
       forwarders = fwds;
+      appVersion = ver;
 
       if (reqs.length > 0 && !selectedRequestId) {
         selectedRequestId = reqs[0].id;
@@ -489,9 +495,11 @@
     {tunnelStatus}
     {serverStatus}
     {forwarders}
+    {appVersion}
     {isTunnelLoading}
     onToggleTunnel={handleToggleTunnel}
     onOpenForwarderModal={() => (isForwarderModalOpen = true)}
+    onOpenAboutModal={() => (isAboutModalOpen = true)}
     onSendTest={handleSendTest}
     onClearRequests={handleClearRequests}
   />
@@ -606,5 +614,11 @@
     onDeleteForwarder={handleDeleteForwarder}
     onStartForwarder={handleStartForwarder}
     onStopForwarder={handleStopForwarder}
+  />
+
+  <AboutModal
+    isOpen={isAboutModalOpen}
+    {appVersion}
+    onClose={() => (isAboutModalOpen = false)}
   />
 </div>

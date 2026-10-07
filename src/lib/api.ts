@@ -46,9 +46,68 @@ const mockServer: ServerStatus = {
 
 const listeners: ((req: WebhookRequest) => void)[] = [];
 
+let activePendingUpdate: any = null;
+
 export const api = {
   isTauriRuntime(): boolean {
     return !!tauriInvoke;
+  },
+
+  async getAppVersion(): Promise<string> {
+    if (tauriInvoke) {
+      try {
+        return await tauriInvoke('get_app_version');
+      } catch {
+        return '0.1.0';
+      }
+    }
+    return '0.1.0';
+  },
+
+  async checkForAppUpdates(): Promise<{
+    available: boolean;
+    currentVersion: string;
+    version?: string;
+    body?: string;
+    error?: string;
+  }> {
+    if (!isTauri) {
+      return { available: false, currentVersion: '0.1.0 (Web)' };
+    }
+    try {
+      const { check } = await import('@tauri-apps/plugin-updater');
+      const update = await check();
+      if (update) {
+        activePendingUpdate = update;
+        return {
+          available: true,
+          currentVersion: update.currentVersion,
+          version: update.version,
+          body: update.body || '',
+        };
+      }
+      activePendingUpdate = null;
+      return {
+        available: false,
+        currentVersion: '0.1.0',
+      };
+    } catch (err: any) {
+      console.warn('Lỗi kiểm tra cập nhật:', err);
+      return {
+        available: false,
+        currentVersion: '0.1.0',
+        error: err?.message || 'Không thể kiểm tra cập nhật lúc này',
+      };
+    }
+  },
+
+  async installAppUpdate(): Promise<void> {
+    if (!activePendingUpdate) {
+      throw new Error('Không có bản cập nhật nào đang chờ');
+    }
+    await activePendingUpdate.downloadAndInstall();
+    const { relaunch } = await import('@tauri-apps/plugin-process');
+    await relaunch();
   },
 
   async getServerStatus(): Promise<ServerStatus> {

@@ -8,8 +8,10 @@
     tunnelStatus,
     serverStatus,
     forwarders = [],
+    appVersion = '0.1.0',
     onToggleTunnel,
     onOpenForwarderModal,
+    onOpenAboutModal,
     onSendTest,
     onClearRequests,
     isTunnelLoading = false,
@@ -17,8 +19,10 @@
     tunnelStatus: TunnelStatus;
     serverStatus: ServerStatus;
     forwarders?: ApiForwarder[];
+    appVersion?: string;
     onToggleTunnel: () => void;
     onOpenForwarderModal: () => void;
+    onOpenAboutModal?: () => void;
     onSendTest: (preset: string) => void;
     onClearRequests: () => void;
     isTunnelLoading?: boolean;
@@ -42,6 +46,13 @@
   <div class="brand">
     <Logo size={23} />
     <span class="brand-title">Webhook Lab</span>
+    <button
+      class="brand-version-badge"
+      onclick={onOpenAboutModal}
+      title="Phiên bản v{appVersion} - Bấm để kiểm tra cập nhật tự động"
+    >
+      v{appVersion}
+    </button>
     <span class="brand-tag">Cục Bộ</span>
   </div>
 
@@ -178,6 +189,24 @@
 </header>
 
 <style>
+  .brand-version-badge {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 1px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .brand-version-badge:hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+  }
+
   .tunnel-label {
     font-size: 11px;
     font-weight: 600;
