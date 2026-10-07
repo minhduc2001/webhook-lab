@@ -49,11 +49,10 @@
     <button
       class="brand-version-badge"
       onclick={onOpenAboutModal}
-      title="Phiên bản v{appVersion} - Bấm để kiểm tra cập nhật tự động"
+      title="Phiên bản v{appVersion} - Bấm để kiểm tra cập nhật"
     >
       v{appVersion}
     </button>
-    <span class="brand-tag">Cục Bộ</span>
   </div>
 
   <div class="top-bar-center">
@@ -62,47 +61,46 @@
       <span class="status-dot" class:active={tunnelStatus.is_running}></span>
       
       {#if tunnelStatus.is_running && tunnelStatus.public_url}
-        <span class="tunnel-label">URL Công Khai:</span>
         <span class="tunnel-url" title={tunnelStatus.public_url}>
           {tunnelStatus.public_url}
         </span>
         <button
           class="btn-icon"
           onclick={handleCopyUrl}
-          title={copied ? 'Đã sao chép!' : 'Sao chép URL HTTPS công khai'}
+          title={copied ? 'Đã sao chép!' : 'Sao chép URL'}
         >
-          <Icons name={copied ? 'check' : 'copy'} size={13} color={copied ? '#34d399' : '#94a3b8'} />
+          <Icons name={copied ? 'check' : 'copy'} size={12} color={copied ? '#34d399' : '#94a3b8'} />
         </button>
         <button
           class="btn-text-danger"
           onclick={onToggleTunnel}
           disabled={isTunnelLoading}
-          title="Dừng Cloudflare Quick Tunnel"
+          title="Dừng Cloudflare Tunnel"
         >
-          Dừng Tunnel
+          Dừng
         </button>
       {:else if isTunnelLoading || tunnelStatus.is_installing}
         <span class="tunnel-loading" title={tunnelStatus.status_message || ''}>
-          <Icons name="refresh" size={13} class="spin" />
-          <span>{tunnelStatus.status_message || 'Đang kết nối Cloudflare Quick Tunnel...'}</span>
+          <Icons name="refresh" size={12} class="spin" />
+          <span>{tunnelStatus.status_message || 'Đang kết nối tunnel...'}</span>
         </span>
       {:else}
         {#if tunnelStatus.error}
           <span class="tunnel-error-text" title={tunnelStatus.error}>
-            <Icons name="alert-circle" size={12} color="#f87171" />
+            <Icons name="alert-circle" size={11} color="#f87171" />
             <span>Lỗi khởi động</span>
           </span>
         {:else}
-          <span class="tunnel-idle-text">Tunnel: Ngoại Tuyến (Chỉ Local)</span>
+          <span class="tunnel-idle-text">Chỉ Local</span>
         {/if}
         <button
           class="btn-tunnel-start"
           onclick={onToggleTunnel}
           disabled={isTunnelLoading || !!tunnelStatus.is_installing}
-          title="Tự động khởi động Cloudflare Quick Tunnel (tự tải và cấu hình nếu máy chưa có)"
+          title="Khởi động Cloudflare Quick Tunnel mở ra Internet"
         >
-          <Icons name="globe" size={13} color="#38bdf8" />
-          <span>Mở Ra Internet (Quick Tunnel)</span>
+          <Icons name="globe" size={12} color="#38bdf8" />
+          <span>Mở Internet</span>
         </button>
       {/if}
     </div>
@@ -110,7 +108,7 @@
     <!-- Server Port Badge -->
     <div class="port-badge" title="Cổng Server HTTP Cục Bộ">
       <span class="port-dot"></span>
-      <span>Cổng {serverStatus.port}</span>
+      <span>:{serverStatus.port}</span>
     </div>
 
     <!-- API Forwarder Tool Button (Multi-forwarder) -->
@@ -118,12 +116,12 @@
       class="btn-forwarder-nav"
       class:active={runningCount > 0}
       onclick={onOpenForwarderModal}
-      title="Tận dụng Cloudflare để public bất kỳ local API / host + port nào ra Internet (Hỗ trợ nhiều cổng đồng thời)"
+      title="Public bất kỳ local port nào ra Internet"
     >
       <Icons name="globe" size={12} color={runningCount > 0 ? '#34d399' : '#94a3b8'} />
       <span>Forward API</span>
       {#if runningCount > 0}
-        <span class="active-port-pill">{runningCount} Đang Bật</span>
+        <span class="active-port-pill">{runningCount} Bật</span>
       {/if}
     </button>
   </div>
@@ -205,12 +203,6 @@
   .brand-version-badge:hover {
     background: rgba(56, 189, 248, 0.25);
     border-color: #38bdf8;
-  }
-
-  .tunnel-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
   }
 
   .tunnel-idle-text {

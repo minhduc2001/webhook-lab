@@ -133,8 +133,8 @@
     >
       <div class="modal-header">
         <div class="title-col">
-          <h3 class="modal-title">Quy Tắc Phản Hồi Có Điều Kiện</h3>
-          <span class="modal-subtitle">Endpoint: {endpoint.name} (/wh/{endpoint.slug})</span>
+          <h3 class="modal-title">Quy Tắc Phản Hồi</h3>
+          <span class="modal-subtitle">/wh/{endpoint.slug}</span>
         </div>
         <button class="btn-close" onclick={onClose}>
           <Icons name="x" size={16} />
@@ -144,21 +144,18 @@
       <div class="modal-body">
         {#if !isEditing}
           <div class="rules-list-toolbar">
-            <span class="rules-count-desc">
-              Các quy tắc được kiểm tra từ trên xuống dưới. Quy tắc đầu tiên khớp sẽ quyết định HTTP response trả về.
-            </span>
+            <span class="rules-count-desc">{rules.length} quy tắc</span>
             <button class="btn-primary sm" onclick={startCreateNew}>
               <Icons name="plus" size={12} color="#ffffff" />
-              <span>+ Thêm Quy Tắc</span>
+              <span>Thêm Quy Tắc</span>
             </button>
           </div>
 
           {#if rules.length === 0}
             <div class="empty-rules">
               <Icons name="sliders" size={24} color="#64748b" />
-              <span>Chưa Có Quy Tắc Nào</span>
-              <p>Thêm quy tắc để mô phỏng phản hồi động theo từng loại webhook (ví dụ trả về 401 khi sai chữ ký, hoặc 200 kèm JSON tùy biến).</p>
-              <button class="btn-secondary" onclick={startCreateNew}>Tạo Quy Tắc Đầu Tiên</button>
+              <span>Chưa có quy tắc nào</span>
+              <button class="btn-secondary" onclick={startCreateNew}>+ Thêm Quy Tắc</button>
             </div>
           {:else}
             <div class="rules-items-list">
@@ -177,14 +174,14 @@
                         class="btn-toggle-switch"
                         class:active={r.is_enabled}
                         onclick={() => toggleRuleEnabled(r)}
-                        title={r.is_enabled ? 'Tắt quy tắc này' : 'Bật quy tắc này'}
+                        title={r.is_enabled ? 'Tắt quy tắc' : 'Bật quy tắc'}
                       >
-                        {r.is_enabled ? 'Đang bật' : 'Đã tắt'}
+                        {r.is_enabled ? 'Bật' : 'Tắt'}
                       </button>
-                      <button class="btn-icon" onclick={() => startEdit(r)} title="Chỉnh sửa quy tắc">
+                      <button class="btn-icon" onclick={() => startEdit(r)} title="Chỉnh sửa">
                         <Icons name="settings" size={12} color="#94a3b8" />
                       </button>
-                      <button class="btn-icon danger" onclick={() => onDeleteRule(r.id)} title="Xóa quy tắc">
+                      <button class="btn-icon danger" onclick={() => onDeleteRule(r.id)} title="Xóa">
                         <Icons name="trash" size={12} color="#f87171" />
                       </button>
                     </div>
@@ -199,7 +196,7 @@
                     <span class="cond-op">{r.condition_operator}</span>
                     <span class="cond-val">"{r.condition_value}"</span>
                     {#if r.response_delay_ms > 0}
-                      <span class="cond-delay">+{r.response_delay_ms}ms trễ</span>
+                      <span class="cond-delay">+{r.response_delay_ms}ms</span>
                     {/if}
                   </div>
                 </div>
@@ -210,32 +207,32 @@
           <!-- Editing / Creating Rule Form -->
           <div class="rule-edit-form">
             <div class="form-group">
-              <label class="form-label" for="rule-name-input">Tên Quy Tắc</label>
+              <label class="form-label" for="rule-name-input">Tên quy tắc</label>
               <input
                 id="rule-name-input"
                 type="text"
                 class="form-input"
-                placeholder="VD: Xác Thực Chữ Ký Thất Bại hoặc Đơn Hàng Thành Công"
+                placeholder="VD: Kiểm tra Token hoặc Đơn hàng"
                 bind:value={ruleName}
               />
             </div>
 
-            <div class="form-section-title">Tiêu Chí Khớp Điều Kiện (KHI NÀO)</div>
+            <div class="form-section-title">Điều Kiện Khớp</div>
 
             <div class="form-row-3">
               <div class="form-group">
                 <label class="form-label" for="rule-cond-type-input">Loại</label>
                 <select id="rule-cond-type-input" class="form-select" bind:value={conditionType}>
-                  <option value="header">Header HTTP</option>
-                  <option value="json_body">Trường JSON Body</option>
-                  <option value="path">Đường dẫn con (Path)</option>
-                  <option value="query">Tham số URL Query</option>
-                  <option value="method">Phương thức (Method)</option>
+                  <option value="header">Header</option>
+                  <option value="json_body">JSON Body</option>
+                  <option value="path">Path</option>
+                  <option value="query">URL Query</option>
+                  <option value="method">Method</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="rule-cond-field-input">Tên Trường / Key</label>
+                <label class="form-label" for="rule-cond-field-input">Trường / Key</label>
                 <input
                   id="rule-cond-field-input"
                   type="text"
@@ -246,49 +243,49 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="rule-cond-op-input">Toán Tử So Sánh</label>
+                <label class="form-label" for="rule-cond-op-input">Toán tử</label>
                 <select id="rule-cond-op-input" class="form-select" bind:value={conditionOperator}>
-                  <option value="equals">Bằng chính xác (Equals)</option>
-                  <option value="contains">Có chứa (Contains)</option>
-                  <option value="regex">Khớp Regex</option>
-                  <option value="exists">Tồn tại (Exists)</option>
+                  <option value="equals">Equals (=)</option>
+                  <option value="contains">Contains</option>
+                  <option value="regex">Regex</option>
+                  <option value="exists">Exists</option>
                 </select>
               </div>
             </div>
 
             {#if conditionOperator !== 'exists'}
               <div class="form-group">
-                <label class="form-label" for="rule-cond-val-input">Giá Trị Kỳ Vọng Để Khớp</label>
+                <label class="form-label" for="rule-cond-val-input">Giá trị khớp</label>
                 <input
                   id="rule-cond-val-input"
                   type="text"
                   class="form-input mono"
-                  placeholder="VD: payment_intent.succeeded"
+                  placeholder="VD: payment.success"
                   bind:value={conditionValue}
                 />
               </div>
             {/if}
 
-            <div class="form-section-title">Phản Hồi Trả Về (THÌ TRẢ VỀ)</div>
+            <div class="form-section-title">Phản Hồi Trả Về</div>
 
             <div class="form-row-2">
               <div class="form-group">
-                <label class="form-label" for="rule-status-input">Mã HTTP Trả Về</label>
+                <label class="form-label" for="rule-status-input">Mã HTTP</label>
                 <select id="rule-status-input" class="form-select" bind:value={responseStatus}>
-                  <option value={200}>200 OK (Thành công)</option>
-                  <option value={201}>201 Created (Đã tạo)</option>
-                  <option value={204}>204 No Content (Rỗng)</option>
+                  <option value={200}>200 OK</option>
+                  <option value={201}>201 Created</option>
+                  <option value={204}>204 No Content</option>
                   <option value={400}>400 Bad Request</option>
-                  <option value={401}>401 Unauthorized (Chưa xác thực)</option>
-                  <option value={403}>403 Forbidden (Bị cấm)</option>
+                  <option value={401}>401 Unauthorized</option>
+                  <option value={403}>403 Forbidden</option>
                   <option value={404}>404 Not Found</option>
                   <option value={429}>429 Too Many Requests</option>
-                  <option value={500}>500 Internal Server Error</option>
+                  <option value={500}>500 Server Error</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="rule-delay-input">Thêm Độ Trễ Riêng (ms)</label>
+                <label class="form-label" for="rule-delay-input">Độ trễ (ms)</label>
                 <input
                   id="rule-delay-input"
                   type="number"
@@ -302,7 +299,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="rule-body-input">Nội Dung Body Phản Hồi Tùy Biến</label>
+              <label class="form-label" for="rule-body-input">Body phản hồi</label>
               <textarea
                 id="rule-body-input"
                 rows="4"
@@ -381,13 +378,6 @@
     gap: 8px;
     text-align: center;
     color: var(--text-muted);
-  }
-
-  .empty-rules p {
-    font-size: 12px;
-    color: var(--text-dim);
-    max-width: 320px;
-    margin-bottom: 8px;
   }
 
   .rules-items-list {

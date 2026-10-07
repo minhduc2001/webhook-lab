@@ -45,11 +45,11 @@
   <div class="requests-header">
     <div class="requests-header-top">
       <span class="section-title">
-        Danh Sách Webhook ({filteredRequests.length}{#if requests.length !== filteredRequests.length}/{requests.length}{/if})
+        Requests ({filteredRequests.length}{#if requests.length !== filteredRequests.length}/{requests.length}{/if})
       </span>
       <div class="filters-row">
         <select class="select-sm" bind:value={methodFilter}>
-          <option value="ALL">Mọi Method</option>
+          <option value="ALL">Method</option>
           <option value="POST">POST</option>
           <option value="GET">GET</option>
           <option value="PUT">PUT</option>
@@ -57,10 +57,10 @@
           <option value="DELETE">DELETE</option>
         </select>
         <select class="select-sm" bind:value={statusFilter}>
-          <option value="ALL">Mọi Status</option>
-          <option value="2xx">2xx Thành công</option>
-          <option value="4xx">4xx Lỗi Client</option>
-          <option value="5xx">5xx Lỗi Server</option>
+          <option value="ALL">Status</option>
+          <option value="2xx">2xx</option>
+          <option value="4xx">4xx</option>
+          <option value="5xx">5xx</option>
         </select>
       </div>
     </div>
@@ -69,12 +69,12 @@
       <Icons name="search" size={12} color="#64748b" />
       <input
         type="text"
-        placeholder="Lọc theo path, payload, IP..."
+        placeholder="Lọc request..."
         bind:value={searchQuery}
         class="search-input"
       />
       {#if searchQuery}
-        <button class="btn-clear-search" onclick={() => (searchQuery = '')} title="Xóa bộ lọc tìm kiếm">
+        <button class="btn-clear-search" onclick={() => (searchQuery = '')} title="Xóa bộ lọc">
           <Icons name="x" size={11} />
         </button>
       {/if}
@@ -85,11 +85,11 @@
     {#if filteredRequests.length === 0}
       <div class="empty-requests">
         <div class="empty-icon-box">
-          <Icons name="refresh" size={24} color="#64748b" />
+          <Icons name="refresh" size={22} color="#64748b" />
         </div>
-        <span class="empty-title">Đang Chờ Webhook Đến...</span>
+        <span class="empty-title">Chờ Webhook...</span>
         <span class="empty-desc">
-          Gửi HTTP request tới endpoint của bạn. Toàn bộ headers, body và phản hồi sẽ hiển thị trực tiếp tại đây.
+          Gửi HTTP request tới endpoint để bắt đầu ghi nhận
         </span>
       </div>
     {:else}

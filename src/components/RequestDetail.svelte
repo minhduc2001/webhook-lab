@@ -81,10 +81,10 @@
   {#if !request}
     <div class="empty-state">
       <div class="empty-icon">
-        <Icons name="code" size={28} />
+        <Icons name="code" size={24} />
       </div>
-      <h3>Chưa Chọn Request Nào</h3>
-      <p>Chọn một webhook request từ danh sách bên trái để kiểm tra chi tiết headers, payload, phản hồi và bắn lại (replay).</p>
+      <h3>Chọn Một Request</h3>
+      <p>Xem chi tiết headers, payload và phản hồi</p>
     </div>
   {:else}
     {@const mColors = getMethodColor(request.method)}
@@ -116,10 +116,10 @@
         <button
           class="btn-primary"
           onclick={() => onOpenReplay(request)}
-          title="Bắn lại webhook này sang server backend nội bộ của bạn"
+          title="Bắn lại webhook này sang server của bạn"
         >
           <Icons name="play" size={12} color="#ffffff" />
-          <span>Bắn Lại (Replay)</span>
+          <span>Replay</span>
         </button>
 
         <button
@@ -157,7 +157,7 @@
         class:active={activeTab === 'body'}
         onclick={() => (activeTab = 'body')}
       >
-        Dữ Liệu Body ({formatBytes(request.body.length)})
+        Body ({formatBytes(request.body.length)})
       </button>
       <button
         class="tab-btn"
@@ -171,28 +171,28 @@
         class:active={activeTab === 'query'}
         onclick={() => (activeTab = 'query')}
       >
-        Query Params ({Object.keys(request.query_params).length})
+        Query ({Object.keys(request.query_params).length})
       </button>
       <button
         class="tab-btn"
         class:active={activeTab === 'response'}
         onclick={() => (activeTab = 'response')}
       >
-        Phản Hồi Đã Trả Về
+        Phản Hồi
       </button>
       <button
         class="tab-btn"
         class:active={activeTab === 'overview'}
         onclick={() => (activeTab = 'overview')}
       >
-        Tổng Quan
+        Chi Tiết
       </button>
       <button
         class="tab-btn"
         class:active={activeTab === 'code'}
         onclick={() => (activeTab = 'code')}
       >
-        Mã Lệnh Mẫu
+        Code
       </button>
     </nav>
 

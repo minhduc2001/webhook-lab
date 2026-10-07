@@ -55,9 +55,9 @@
 <aside class="sidebar">
   <div class="sidebar-header">
     <span class="section-title">Endpoints ({endpoints.length})</span>
-    <button class="btn-add-ep" onclick={onOpenCreateModal} title="Tạo Webhook Endpoint Mới">
-      <Icons name="plus" size={13} />
-      <span>+ Tạo mới</span>
+    <button class="btn-add-ep" onclick={onOpenCreateModal} title="Tạo Endpoint Mới">
+      <Icons name="plus" size={12} />
+      <span>Mới</span>
     </button>
   </div>
 
@@ -65,7 +65,7 @@
     <Icons name="search" size={12} color="#64748b" />
     <input
       type="text"
-      placeholder="Tìm theo tên hoặc slug..."
+      placeholder="Tìm endpoint..."
       bind:value={searchQuery}
       class="ep-search-input"
     />
@@ -80,9 +80,8 @@
     >
       <div class="ep-header-row">
         <span class="ep-name">Tất Cả Endpoints</span>
-        <span class="ep-badge">TẤT CẢ</span>
+        <span class="ep-badge">ALL</span>
       </div>
-      <span class="ep-slug">Xem dòng sự kiện webhook toàn bộ</span>
     </button>
 
     {#each filteredEndpoints as ep (ep.id)}
@@ -201,11 +200,9 @@
   <div class="sidebar-footer">
     <div class="active-url-box">
       <div class="url-type-row">
-        <span class="url-type-label">
-          {tunnelStatus.is_running ? 'URL Công Khai Cloudflare' : 'URL Cục Bộ (Local)'}
-        </span>
+        <span class="url-type-label">URL Endpoint</span>
         <span class="env-pill" class:online={tunnelStatus.is_running}>
-          {tunnelStatus.is_running ? 'INTERNET' : 'LOCAL'}
+          {tunnelStatus.is_running ? 'HTTPS' : 'LOCAL'}
         </span>
       </div>
       <div class="target-url-display">

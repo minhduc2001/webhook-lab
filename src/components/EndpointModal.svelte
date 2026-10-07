@@ -288,11 +288,10 @@
           </div>
         </div>
 
-        <!-- 3. Chuyển hướng & Chuyển tiếp Webhook (giống Webhook.site) -->
+        <!-- 3. Chuyển hướng & Chuyển tiếp Webhook -->
         <div class="config-section redirect-box">
           <div class="section-header-row">
-            <span class="section-title-label">Chuyển Hướng & Tự Động Chuyển Tiếp (Relay)</span>
-            <span class="section-desc-label">Tính năng cao cấp tương tự Webhook.site</span>
+            <span class="section-title-label">Chuyển Tiếp & Chuyển Hướng</span>
           </div>
 
           <!-- HTTP Redirect Mode -->
@@ -300,15 +299,14 @@
             <div class="sub-toggle-header">
               <label class="sub-toggle-title">
                 <input type="checkbox" bind:checked={enableRedirect} />
-                <span>Chuyển Hướng HTTP (HTTP Redirect 301 / 302 / 307)</span>
+                <span>Chuyển Hướng HTTP (Redirect)</span>
               </label>
-              <span class="sub-toggle-hint">Trả về mã redirect kèm header Location cho client</span>
             </div>
 
             {#if enableRedirect}
               <div class="form-row-2 mt-2">
                 <div class="form-group">
-                  <label class="form-label" for="ep-redirect-url">URL Đích Chuyển Hướng Đến (Location)</label>
+                  <label class="form-label" for="ep-redirect-url">URL Đích (Location)</label>
                   <input
                     id="ep-redirect-url"
                     type="text"
@@ -318,12 +316,12 @@
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="ep-redirect-status">Mã Chuyển Hướng (Status)</label>
+                  <label class="form-label" for="ep-redirect-status">Mã HTTP</label>
                   <select id="ep-redirect-status" class="form-select" bind:value={redirectStatus}>
-                    <option value={302}>302 Found (Chuyển hướng tạm thời)</option>
-                    <option value={301}>301 Moved Permanently (Vĩnh viễn)</option>
-                    <option value={307}>307 Temporary Redirect (Giữ nguyên POST/GET)</option>
-                    <option value={308}>308 Permanent Redirect (Giữ nguyên Method)</option>
+                    <option value={302}>302 Found</option>
+                    <option value={301}>301 Moved Permanently</option>
+                    <option value={307}>307 Temporary Redirect</option>
+                    <option value={308}>308 Permanent Redirect</option>
                   </select>
                 </div>
               </div>
@@ -335,14 +333,13 @@
             <div class="sub-toggle-header">
               <label class="sub-toggle-title">
                 <input type="checkbox" bind:checked={enableForward} />
-                <span>Tự Động Chuyển Tiếp (Auto-Forwarding / Relay Webhook)</span>
+                <span>Tự Động Chuyển Tiếp (Relay)</span>
               </label>
-              <span class="sub-toggle-hint">Tự động bắn bản sao payload sang backend nội bộ của bạn</span>
             </div>
 
             {#if enableForward}
               <div class="form-group mt-2">
-                <label class="form-label" for="ep-forward-url">URL Backend Đích Nhận Bản Sao (Local / Server)</label>
+                <label class="form-label" for="ep-forward-url">URL Đích</label>
                 <input
                   id="ep-forward-url"
                   type="text"
@@ -350,19 +347,15 @@
                   placeholder="http://localhost:3000/api/webhook"
                   bind:value={autoForwardUrl}
                 />
-                <span class="field-hint">
-                  Ngay khi Webhook Lab nhận được request, nó sẽ tự động gửi tiếp dữ liệu nguyên vẹn sang URL này.
-                </span>
               </div>
             {/if}
           </div>
         </div>
 
-        <!-- 4. Định dạng & Mẫu phản hồi (Response Format) -->
+        <!-- 4. Định dạng & Mẫu phản hồi -->
         <div class="config-section">
           <div class="section-header-row">
-            <span class="section-title-label">Định Dạng & Mẫu Phản Hồi Trả Về (Response Format)</span>
-            <span class="section-desc-label">Tùy biến body và mã HTTP trả lại cho webhook sender</span>
+            <span class="section-title-label">Phản Hồi (Response)</span>
           </div>
 
           <!-- Presets -->
@@ -381,22 +374,22 @@
 
           <div class="form-row-2 mt-2">
             <div class="form-group">
-              <label class="form-label" for="ep-status-input">Mã Trạng Thái Phản Hồi (HTTP Status)</label>
+              <label class="form-label" for="ep-status-input">HTTP Status</label>
               <select id="ep-status-input" class="form-select" bind:value={defaultStatus}>
-                <option value={200}>200 OK (Thành công chuẩn)</option>
-                <option value={201}>201 Created (Đã tạo thành công)</option>
-                <option value={202}>202 Accepted (Đã nhận xử lý ngầm)</option>
-                <option value={204}>204 No Content (Thành công không có body)</option>
-                <option value={400}>400 Bad Request (Dữ liệu gửi sai)</option>
-                <option value={401}>401 Unauthorized (Chưa xác thực)</option>
-                <option value={404}>404 Not Found (Không tìm thấy)</option>
-                <option value={429}>429 Too Many Requests (Quá tải request)</option>
-                <option value={500}>500 Internal Server Error (Lỗi hệ thống)</option>
+                <option value={200}>200 OK</option>
+                <option value={201}>201 Created</option>
+                <option value={202}>202 Accepted</option>
+                <option value={204}>204 No Content</option>
+                <option value={400}>400 Bad Request</option>
+                <option value={401}>401 Unauthorized</option>
+                <option value={404}>404 Not Found</option>
+                <option value={429}>429 Too Many Requests</option>
+                <option value={500}>500 Internal Error</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="ep-content-type-input">Header Content-Type</label>
+              <label class="form-label" for="ep-content-type-input">Content-Type</label>
               <input
                 id="ep-content-type-input"
                 type="text"
@@ -459,17 +452,14 @@
           </div>
         </div>
 
-        <!-- 5. Mô phỏng Lỗi Ngẫu Nhiên & Chaos (Chaos Simulation Engine) -->
+        <!-- 5. Mô phỏng Lỗi Ngẫu Nhiên & Chaos -->
         <div class="chaos-section" class:active-chaos={enableChaos && (errorRatePercent > 0 || delayMs > 0)}>
           <div class="chaos-header-row">
             <div class="chaos-title-col">
               <div class="chaos-badge">
                 <Icons name="zap" size={13} color="#f59e0b" />
-                <span>Mô Phỏng Lỗi Ngẫu Nhiên & Chaos (Random Error Simulation)</span>
+                <span>Giả Lập Lỗi & Độ Trễ (Chaos)</span>
               </div>
-              <span class="chaos-desc">
-                Tự động trả về lỗi ngẫu nhiên và độ trễ mạng để kiểm tra cơ chế Retry & Circuit Breaker của bạn
-              </span>
             </div>
 
             <label class="switch-toggle" title="Bật/Tắt mô phỏng lỗi ngẫu nhiên">
@@ -483,7 +473,7 @@
               <!-- Random Failure Probability Slider -->
               <div class="slider-box">
                 <div class="slider-label-row">
-                  <span class="slider-title">Tỷ Lệ Bị Lỗi Ngẫu Nhiên</span>
+                  <span class="slider-title">Tỷ lệ lỗi</span>
                   <span
                     class="chaos-pill"
                     class:zero={errorRatePercent === 0}
@@ -501,17 +491,12 @@
                   class="chaos-range"
                   bind:value={errorRatePercent}
                 />
-                <span class="slider-hint">
-                  {errorRatePercent === 0
-                    ? 'Tắt lỗi ngẫu nhiên (100% request thành công)'
-                    : `Cứ trung bình 100 request gửi đến sẽ có ${errorRatePercent} request bị trả về lỗi ngẫu nhiên`}
-                </span>
               </div>
 
               <!-- Latency Delay Slider -->
               <div class="slider-box">
                 <div class="slider-label-row">
-                  <span class="slider-title">Độ Trễ Mạng Giả Lập (Delay)</span>
+                  <span class="slider-title">Độ trễ (Delay)</span>
                   <span class="chaos-pill blue">{delayMs} ms</span>
                 </div>
                 <input
@@ -522,35 +507,32 @@
                   class="chaos-range"
                   bind:value={delayMs}
                 />
-                <span class="slider-hint">
-                  {delayMs === 0 ? 'Không thêm độ trễ' : `Mỗi request phải đợi ${delayMs}ms mới được trả về`}
-                </span>
               </div>
             </div>
 
             {#if errorRatePercent > 0}
               <div class="error-spec-box">
                 <div class="form-group">
-                  <label class="form-label" for="ep-err-status-select">Mã Lỗi HTTP Khi Bị Lỗi Ngẫu Nhiên</label>
+                  <label class="form-label" for="ep-err-status-select">Mã lỗi HTTP</label>
                   <select id="ep-err-status-select" class="form-select" bind:value={errorStatus}>
-                    <option value={429}>429 Too Many Requests (Mô phỏng Rate Limit)</option>
-                    <option value={500}>500 Internal Server Error (Lỗi hệ thống nội bộ)</option>
-                    <option value={502}>502 Bad Gateway (Lỗi cổng gateway trung gian)</option>
-                    <option value={503}>503 Service Unavailable (Hệ thống tạm ngưng phục vụ)</option>
-                    <option value={504}>504 Gateway Timeout (Quá thời gian chờ gateway)</option>
-                    <option value={400}>400 Bad Request (Lỗi yêu cầu)</option>
-                    <option value={401}>401 Unauthorized (Lỗi xác thực)</option>
+                    <option value={429}>429 Too Many Requests</option>
+                    <option value={500}>500 Internal Error</option>
+                    <option value={502}>502 Bad Gateway</option>
+                    <option value={503}>503 Service Unavailable</option>
+                    <option value={504}>504 Gateway Timeout</option>
+                    <option value={400}>400 Bad Request</option>
+                    <option value={401}>401 Unauthorized</option>
                   </select>
                 </div>
 
                 <div class="form-group mt-2">
-                  <label class="form-label" for="ep-err-body-input">Nội Dung Body Trả Về Khi Lỗi Ngẫu Nhiên</label>
+                  <label class="form-label" for="ep-err-body-input">Nội dung lỗi (Body)</label>
                   <textarea
                     id="ep-err-body-input"
                     rows="3"
                     class="form-textarea"
                     bind:value={errorBody}
-                    placeholder="JSON hoặc text thông báo lỗi khi request bị rơi vào tỷ lệ lỗi..."
+                    placeholder="JSON hoặc text thông báo lỗi..."
                   ></textarea>
                 </div>
               </div>
@@ -560,9 +542,9 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-secondary" onclick={onClose}>Hủy Bỏ</button>
+        <button class="btn-secondary" onclick={onClose}>Hủy</button>
         <button class="btn-primary" onclick={handleSubmit}>
-          {endpoint ? 'Lưu Thay Đổi' : 'Tạo Endpoint'}
+          {endpoint ? 'Lưu' : 'Tạo Endpoint'}
         </button>
       </div>
     </div>
@@ -712,17 +694,6 @@
     cursor: pointer;
   }
 
-  .sub-toggle-hint {
-    font-size: 10.5px;
-    color: var(--text-dim);
-  }
-
-  .field-hint {
-    font-size: 10.5px;
-    color: var(--text-dim);
-    margin-top: 3px;
-  }
-
   .preset-pills-row {
     display: flex;
     align-items: center;
@@ -862,11 +833,6 @@
     letter-spacing: 0.03em;
   }
 
-  .chaos-desc {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
   /* Switch Toggle */
   .switch-toggle {
     position: relative;
@@ -937,11 +903,6 @@
     font-size: 11.5px;
     font-weight: 600;
     color: var(--text-muted);
-  }
-
-  .slider-hint {
-    font-size: 10px;
-    color: var(--text-dim);
   }
 
   .chaos-pill {

@@ -128,17 +128,12 @@
       <div class="modal-header">
         <div class="title-with-badge">
           <div class="icon-bubble">
-            <Icons name="globe" size={17} color="#38bdf8" />
+            <Icons name="globe" size={16} color="#38bdf8" />
           </div>
-          <div class="title-col">
-            <div class="title-row">
-              <h3 class="modal-title">Quản Lý Chuyển Tiếp API (Cloudflare Forwarders)</h3>
-              <span class="count-tag" class:active={runningCount > 0}>
-                {runningCount} / {forwarders.length} Đang Chạy
-              </span>
-            </div>
-            <span class="modal-subtitle">
-              Public nhiều local API / host + port ra Internet đồng thời, mỗi cổng nhận 1 HTTPS domain độc lập
+          <div class="title-row">
+            <h3 class="modal-title">Forward API (Cloudflare)</h3>
+            <span class="count-tag" class:active={runningCount > 0}>
+              {runningCount} / {forwarders.length} Online
             </span>
           </div>
         </div>
@@ -146,8 +141,8 @@
         <div class="header-actions">
           {#if !showForm}
             <button class="btn-add-fwd" onclick={handleOpenCreate}>
-              <Icons name="plus" size={13} />
-              <span>Thêm Cổng Mới</span>
+              <Icons name="plus" size={12} />
+              <span>Thêm Cổng</span>
             </button>
           {/if}
           <button class="btn-close" onclick={onClose} aria-label="Đóng">
@@ -179,19 +174,19 @@
 
             <div class="form-row-2">
               <div class="form-group flex-2">
-                <label class="form-label" for="fwd-name-input">Tên Dịch Vụ / Gợi Nhớ</label>
+                <label class="form-label" for="fwd-name-input">Tên dịch vụ</label>
                 <input
                   id="fwd-name-input"
                   type="text"
                   class="form-input"
-                  placeholder="Ví dụ: Backend Node.js, Spring Auth, Frontend Next"
+                  placeholder="vd: Backend API, Auth Service"
                   bind:value={formName}
                   required
                 />
               </div>
 
               <div class="form-group flex-1">
-                <label class="form-label" for="fwd-host-input">Địa Chỉ Host Cục Bộ</label>
+                <label class="form-label" for="fwd-host-input">Host</label>
                 <input
                   id="fwd-host-input"
                   type="text"
@@ -203,7 +198,7 @@
               </div>
 
               <div class="form-group w-port">
-                <label class="form-label" for="fwd-port-input">Cổng (Port)</label>
+                <label class="form-label" for="fwd-port-input">Port</label>
                 <input
                   id="fwd-port-input"
                   type="number"
@@ -219,7 +214,7 @@
 
             <!-- Quick Port Presets -->
             <div class="presets-row">
-              <span class="presets-label">Gợi ý nhanh:</span>
+              <span class="presets-label">Gợi ý:</span>
               {#each portPresets as preset}
                 <button
                   type="button"
@@ -239,7 +234,7 @@
 
             <div class="form-actions-row">
               <button type="button" class="btn-secondary btn-sm" onclick={resetForm}>
-                Hủy Bỏ
+                Hủy
               </button>
               <button type="submit" class="btn-primary btn-sm" disabled={isSubmitting}>
                 {#if isSubmitting}
@@ -247,7 +242,7 @@
                   <span>Đang lưu...</span>
                 {:else}
                   <Icons name="check" size={12} />
-                  <span>{editingId ? 'Cập Nhật Cổng' : 'Lưu & Thêm Vào Danh Sách'}</span>
+                  <span>{editingId ? 'Cập Nhật' : 'Lưu'}</span>
                 {/if}
               </button>
             </div>
@@ -292,22 +287,22 @@
                       {#if fwd.is_running && fwd.public_url}
                         <div class="online-indicator">
                           <span class="pulse-dot"></span>
-                          <span class="online-text">Đang Chạy Trực Tiếp (Online)</span>
+                          <span class="online-text">Online</span>
                         </div>
                       {:else if fwd.is_running}
                         <div class="starting-indicator">
-                          <Icons name="refresh" size={12} class="spin" color="#38bdf8" />
-                          <span>Đang kết nối Cloudflare Quick Tunnel...</span>
+                          <Icons name="refresh" size={11} class="spin" color="#38bdf8" />
+                          <span>Đang kết nối...</span>
                         </div>
                       {:else if fwd.error}
                         <div class="error-indicator">
-                          <Icons name="alert-circle" size={12} color="#f87171" />
-                          <span>Lỗi kết nối</span>
+                          <Icons name="alert-circle" size={11} color="#f87171" />
+                          <span>Lỗi</span>
                         </div>
                       {:else}
                         <div class="idle-indicator">
                           <span class="idle-dot"></span>
-                          <span>Đã Dừng (Offline)</span>
+                          <span>Offline</span>
                         </div>
                       {/if}
                     </div>
@@ -330,14 +325,14 @@
                         class="btn-start-tunnel"
                         disabled={fwd.is_loading}
                         onclick={() => onStartForwarder(fwd.id, fwd.host, fwd.port)}
-                        title="Bật Cloudflare Quick Tunnel cho cổng này"
+                        title="Bật Cloudflare Tunnel cho cổng này"
                       >
                         {#if fwd.is_loading}
                           <Icons name="refresh" size={11} class="spin" />
                           <span>Đang bật...</span>
                         {:else}
                           <Icons name="play" size={11} color="#ffffff" />
-                          <span>Bật Chạy</span>
+                          <span>Bật</span>
                         {/if}
                       </button>
                       <button
@@ -369,10 +364,6 @@
                 <!-- Active Public URL Box -->
                 {#if fwd.is_running && fwd.public_url}
                   <div class="fwd-url-box">
-                    <div class="fwd-url-header">
-                      <span class="fwd-url-label">URL HTTPS Công Khai:</span>
-                      <span class="fwd-url-hint">Bất kỳ ai trên Internet đều có thể gọi vào API này</span>
-                    </div>
                     <div class="fwd-url-control">
                       <input
                         type="text"
@@ -388,10 +379,10 @@
                       >
                         <Icons
                           name={copiedId === fwd.id ? 'check' : 'copy'}
-                          size={13}
+                          size={12}
                           color={copiedId === fwd.id ? '#34d399' : '#ffffff'}
                         />
-                        <span>{copiedId === fwd.id ? 'Đã Chép!' : 'Sao Chép'}</span>
+                        <span>{copiedId === fwd.id ? 'Đã Chép' : 'Sao Chép'}</span>
                       </button>
                     </div>
                   </div>
@@ -400,25 +391,6 @@
             {/each}
           </div>
         {/if}
-
-        <!-- Informative Guide -->
-        <div class="fwd-guide-box">
-          <div class="guide-title">
-            <Icons name="zap" size={13} color="#fbbf24" />
-            <span>Đặc Điểm & Hỗ Trợ Đa Cổng (Multi-Forwarders):</span>
-          </div>
-          <ul class="guide-list">
-            <li>
-              <strong>Độc lập hoàn toàn:</strong> Mỗi forwarder được cấp một URL Cloudflare HTTPS riêng biệt. Bạn có thể bật 2, 3 hay 10 cổng cùng lúc mà không xung đột.
-            </li>
-            <li>
-              <strong>Không cần tài khoản:</strong> Tự động sử dụng Cloudflare Quick Tunnel, không giới hạn lưu lượng, kết nối trực tiếp an toàn.
-            </li>
-            <li>
-              <strong>Lưu trữ vĩnh viễn:</strong> Danh sách cấu hình các cổng được lưu vào SQLite cục bộ, tự động giữ nguyên khi mở lại ứng dụng.
-            </li>
-          </ul>
-        </div>
       </div>
 
       <!-- Footer -->
@@ -457,21 +429,10 @@
     flex-shrink: 0;
   }
 
-  .title-col {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
   .title-row {
     display: flex;
     align-items: center;
     gap: 8px;
-  }
-
-  .modal-subtitle {
-    font-size: 11px;
-    color: var(--text-dim);
   }
 
   .count-tag {
@@ -920,25 +881,6 @@
     gap: 5px;
   }
 
-  .fwd-url-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .fwd-url-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: #38bdf8;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .fwd-url-hint {
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
   .fwd-url-control {
     display: flex;
     align-items: center;
@@ -978,39 +920,5 @@
 
   .btn-copy-url.copied {
     background: #065f46;
-  }
-
-  /* Guide Box */
-  .fwd-guide-box {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
-  }
-
-  .guide-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #fbbf24;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
-  .guide-list {
-    margin-left: 18px;
-    font-size: 10.5px;
-    color: var(--text-dim);
-    line-height: 1.5;
-  }
-
-  .guide-list strong {
-    color: var(--text-muted);
   }
 </style>

@@ -90,7 +90,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="modal-card about-card" onclick={(e) => e.stopPropagation()}>
       <div class="modal-header">
-        <span class="modal-title">Thông Tin & Cập Nhật Ứng Dụng</span>
+        <span class="modal-title">Thông Tin Ứng Dụng</span>
         <button class="btn-close" onclick={onClose} aria-label="Đóng">
           <Icons name="x" size={16} />
         </button>
@@ -99,23 +99,17 @@
       <div class="modal-body about-body">
         <!-- Logo & Version Header -->
         <div class="about-hero">
-          <Logo size={42} />
+          <Logo size={40} />
           <h2 class="app-name">Webhook Lab</h2>
-          <div class="version-pill-row">
-            <span class="version-tag-pill mono">v{appVersion}</span>
-            <span class="channel-pill">Kênh Ổn Định (Production)</span>
-          </div>
-          <p class="app-summary">
-            Công cụ giả lập, gỡ lỗi và chuyển tiếp Webhook / API cục bộ không giới hạn tính năng.
-          </p>
+          <span class="version-tag-pill mono">v{appVersion}</span>
         </div>
 
         <!-- Update Checker Section -->
         <div class="update-section">
           <div class="update-section-header">
             <div class="update-header-title">
-              <Icons name="refresh" size={14} color="#38bdf8" />
-              <span>Cập Nhật Tự Động (Auto-Updater)</span>
+              <Icons name="refresh" size={13} color="#38bdf8" />
+              <span>Cập Nhật Phần Mềm</span>
             </div>
             <button
               class="btn-check-update"
@@ -127,7 +121,7 @@
                 <span>Đang kiểm tra...</span>
               {:else}
                 <Icons name="download" size={12} />
-                <span>Kiểm Tra Bản Mới</span>
+                <span>Kiểm Tra</span>
               {/if}
             </button>
           </div>
@@ -139,12 +133,11 @@
                 <div class="update-alert-top">
                   <div class="update-dot-online"></div>
                   <span class="update-title-text">
-                    Đã có phiên bản mới: <strong>v{checkResult.newVersion}</strong>
+                    Bản mới: <strong>v{checkResult.newVersion}</strong>
                   </span>
                 </div>
                 {#if checkResult.notes}
                   <div class="release-notes-box">
-                    <span class="notes-label">Nội dung cập nhật:</span>
                     <pre class="notes-content">{checkResult.notes}</pre>
                   </div>
                 {/if}
@@ -155,10 +148,10 @@
                 >
                   {#if isInstalling}
                     <Icons name="refresh" size={13} class="spin" />
-                    <span>Đang tải & cài đặt bản cập nhật...</span>
+                    <span>Đang cập nhật...</span>
                   {:else}
                     <Icons name="download" size={13} />
-                    <span>Cập Nhật & Khởi Động Lại Ngay</span>
+                    <span>Cập Nhật & Khởi Động Lại</span>
                   {/if}
                 </button>
               </div>
@@ -173,29 +166,7 @@
                 <span>{checkResult.message}</span>
               </div>
             {/if}
-          {:else}
-            <div class="update-hint-row">
-              <span class="hint-text">
-                Ứng dụng tự động kiểm tra bản phát hành mới từ GitHub khi khởi động.
-              </span>
-            </div>
           {/if}
-        </div>
-
-        <!-- Technical Security & Key Info -->
-        <div class="tech-info-card">
-          <div class="tech-row">
-            <span class="tech-label">Chữ Ký Bảo Mật:</span>
-            <span class="tech-val mono">Ed25519 Minisign (Đã cấu hình)</span>
-          </div>
-          <div class="tech-row">
-            <span class="tech-label">Nguồn Phát Hành:</span>
-            <span class="tech-val mono">minhduc2001/webhook-lab</span>
-          </div>
-          <div class="tech-row">
-            <span class="tech-label">Kiến Trúc Máy Chủ:</span>
-            <span class="tech-val">Tauri v2 + Rust Axum + SQLite</span>
-          </div>
         </div>
       </div>
 
@@ -208,7 +179,7 @@
 
 <style>
   .about-card {
-    max-width: 460px;
+    max-width: 440px;
     width: 90%;
     border: 1px solid rgba(56, 189, 248, 0.3);
   }
@@ -254,12 +225,6 @@
     margin: 4px 0 0;
   }
 
-  .version-pill-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
   .version-tag-pill {
     font-size: 11px;
     font-weight: 700;
@@ -268,23 +233,6 @@
     background: rgba(56, 189, 248, 0.15);
     border: 1px solid rgba(56, 189, 248, 0.35);
     color: #38bdf8;
-  }
-
-  .channel-pill {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--text-dim);
-  }
-
-  .app-summary {
-    font-size: 11px;
-    color: var(--text-dim);
-    max-width: 380px;
-    line-height: 1.4;
-    margin: 2px 0 0;
   }
 
   /* Update Section */
@@ -330,11 +278,6 @@
 
   .btn-check-update:hover {
     background: rgba(56, 189, 248, 0.22);
-  }
-
-  .update-hint-row {
-    font-size: 10px;
-    color: var(--text-dim);
   }
 
   .update-status-box {
@@ -397,12 +340,6 @@
     gap: 3px;
   }
 
-  .notes-label {
-    font-size: 10px;
-    color: var(--text-dim);
-    font-weight: 600;
-  }
-
   .notes-content {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -433,35 +370,5 @@
 
   .btn-install-now:hover {
     background: linear-gradient(135deg, #059669, #047857);
-  }
-
-  /* Technical Info */
-  .tech-info-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .tech-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 10.5px;
-  }
-
-  .tech-label {
-    color: var(--text-dim);
-  }
-
-  .tech-val {
-    color: var(--text-muted);
-  }
-
-  .mono {
-    font-family: var(--font-mono);
   }
 </style>

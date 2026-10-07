@@ -30,12 +30,9 @@
       <div class="modal-header">
         <div class="title-with-badge">
           <div class="icon-bubble">
-            <Icons name="globe" size={18} color="#38bdf8" />
+            <Icons name="globe" size={17} color="#38bdf8" />
           </div>
-          <div class="title-col">
-            <h3 class="modal-title">Xác Nhận Cài Đặt Cloudflare Quick Tunnel</h3>
-            <span class="modal-subtitle">Tạo URL HTTPS công khai để nhận webhook từ Internet về máy tính</span>
-          </div>
+          <h3 class="modal-title">Cài Đặt Cloudflare Tunnel</h3>
         </div>
         <button class="btn-close" onclick={onClose} aria-label="Đóng">
           <Icons name="x" size={16} />
@@ -43,61 +40,40 @@
       </div>
 
       <div class="modal-body">
-        <div class="info-banner">
-          <Icons name="zap" size={15} color="#f59e0b" />
-          <span>
-            Máy tính của bạn chưa có công cụ <strong>Cloudflare Tunnel (cloudflared)</strong>. Bạn có muốn Webhook Lab tự động tải về và cài đặt không?
-          </span>
-        </div>
+        <p class="install-desc">
+          Máy tính của bạn chưa có công cụ <strong>cloudflared</strong>. 
+          Webhook Lab sẽ tự động tải phiên bản chính hãng từ Cloudflare (~35MB) để tạo URL HTTPS công khai ra Internet.
+        </p>
 
-        <div class="specs-grid">
-          <div class="spec-item">
-            <span class="spec-label">Công cụ:</span>
-            <span class="spec-val">Cloudflare Tunnel (<code>cloudflared</code>)</span>
+        <div class="mini-spec-row">
+          <div class="spec-tag">
+            <Icons name="check" size={12} color="#10b981" />
+            <span>Miễn phí 100%</span>
           </div>
-          <div class="spec-item">
-            <span class="spec-label">Nguồn tải:</span>
-            <span class="spec-val">Chính hãng từ Cloudflare GitHub Releases</span>
+          <div class="spec-tag">
+            <Icons name="check" size={12} color="#10b981" />
+            <span>Không cần tài khoản</span>
           </div>
-          <div class="spec-item">
-            <span class="spec-label">Dung lượng:</span>
-            <span class="spec-val">~35 MB (Tải 1 lần duy nhất)</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Tài khoản:</span>
-            <span class="spec-val text-green">Miễn phí 100%, không cần đăng ký tài khoản</span>
-          </div>
-        </div>
-
-        <div class="features-list">
-          <div class="feature-row">
-            <Icons name="check" size={14} color="#10b981" />
-            <span>Tạo URL HTTPS công khai (VD: <code>https://xxxx.trycloudflare.com</code>) trong 2 giây.</span>
-          </div>
-          <div class="feature-row">
-            <Icons name="check" size={14} color="#10b981" />
-            <span>Nhận webhook từ Stripe, ZaloPay, MoMo, GitHub, PayOS về thẳng <code>localhost:4567</code>.</span>
-          </div>
-          <div class="feature-row">
-            <Icons name="check" size={14} color="#10b981" />
-            <span>Không cần mở port router (No Port Forwarding), an toàn và bảo mật cao.</span>
+          <div class="spec-tag">
+            <Icons name="check" size={12} color="#10b981" />
+            <span>HTTPS an toàn</span>
           </div>
         </div>
       </div>
 
       <div class="modal-footer">
         <button class="btn-secondary" onclick={onClose}>
-          Hủy Bỏ
+          Hủy
         </button>
         <button
-          class="btn-primary btn-confirm-install"
+          class="btn-primary"
           onclick={() => {
             onClose();
             onConfirm();
           }}
         >
-          <Icons name="download" size={14} color="#ffffff" />
-          <span>Đồng Ý & Tự Động Tải Về</span>
+          <Icons name="download" size={13} color="#ffffff" />
+          <span>Tải & Cài Đặt</span>
         </button>
       </div>
     </div>
@@ -106,38 +82,26 @@
 
 <style>
   .install-card {
-    max-width: 580px;
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.1);
+    max-width: 440px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
   }
 
   .title-with-badge {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
 
   .icon-bubble {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.25);
+    border: 1px solid rgba(56, 189, 248, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-  }
-
-  .title-col {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .modal-subtitle {
-    font-size: 11px;
-    color: var(--text-dim);
   }
 
   .btn-close {
@@ -148,7 +112,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: 3px;
     border-radius: 4px;
   }
 
@@ -157,82 +121,32 @@
     color: var(--text-main);
   }
 
-  .info-banner {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: rgba(245, 158, 11, 0.08);
-    border: 1px solid rgba(245, 158, 11, 0.22);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 12.5px;
-    color: var(--text-main);
-    line-height: 1.45;
+  .install-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
   }
 
-  .specs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 12px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--border-medium);
-    border-radius: 8px;
-    padding: 12px 14px;
+  .install-desc strong {
+    color: #e2e8f0;
   }
 
-  .spec-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .spec-label {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .spec-val {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-main);
-  }
-
-  .spec-val code {
-    font-family: var(--font-mono);
-    color: #60a5fa;
-  }
-
-  .text-green {
-    color: #34d399 !important;
-  }
-
-  .features-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-left: 2px;
-  }
-
-  .feature-row {
+  .mini-spec-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
-    color: var(--text-muted);
+    margin-top: 8px;
   }
 
-  .feature-row code {
-    font-family: var(--font-mono);
-    color: #93c5fd;
-  }
-
-  .btn-confirm-install {
-    background: linear-gradient(135deg, #0284c7, #2563eb);
-    border: none;
-    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
-  }
-
-  .btn-confirm-install:hover {
-    background: linear-gradient(135deg, #0369a1, #1d4ed8);
+  .spec-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    color: #34d399;
   }
 </style>
