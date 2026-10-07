@@ -1,6 +1,6 @@
 [package]
 name = "webhook-lab"
-version = "0.1.0"
+version = "0.2.0"
 description = "Webhook Lab - Lightweight local-first webhook development and debugging tool"
 authors = ["Webhook Lab Team"]
 license = "MIT"

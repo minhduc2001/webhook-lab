@@ -58,10 +58,10 @@ export const api = {
       try {
         return await tauriInvoke('get_app_version');
       } catch {
-        return '0.1.0';
+        return '0.2.0';
       }
     }
-    return '0.1.0';
+    return '0.2.0';
   },
 
   async checkForAppUpdates(): Promise<{
@@ -72,7 +72,7 @@ export const api = {
     error?: string;
   }> {
     if (!isTauri) {
-      return { available: false, currentVersion: '0.1.0 (Web)' };
+      return { available: false, currentVersion: '0.2.0 (Web)' };
     }
     try {
       const { check } = await import('@tauri-apps/plugin-updater');
@@ -89,13 +89,13 @@ export const api = {
       activePendingUpdate = null;
       return {
         available: false,
-        currentVersion: '0.1.0',
+        currentVersion: '0.2.0',
       };
     } catch (err: any) {
       console.warn('Lỗi kiểm tra cập nhật:', err);
       return {
         available: false,
-        currentVersion: '0.1.0',
+        currentVersion: '0.2.0',
         error: err?.message || 'Không thể kiểm tra cập nhật lúc này',
       };
     }

@@ -510,7 +510,7 @@ async fn get_or_download_cloudflared(
     };
 
     let client = reqwest::Client::builder()
-        .user_agent("WebhookLab/0.1.0")
+        .user_agent("WebhookLab/0.2.0")
         .build()
         .map_err(|e| format!("Lỗi khởi tạo HTTP client: {}", e))?;
 
