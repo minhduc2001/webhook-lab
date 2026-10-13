@@ -35,7 +35,7 @@
   let forwarders = $state<ApiForwarder[]>([]);
   let isForwarderModalOpen = $state(false);
 
-  let appVersion = $state('0.2.0');
+  let appVersion = $state('0.3.0');
   let isAboutModalOpen = $state(false);
 
   let serverStatus = $state<ServerStatus>({

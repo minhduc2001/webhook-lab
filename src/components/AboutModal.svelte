@@ -5,7 +5,7 @@
 
   let {
     isOpen,
-    appVersion = '0.2.0',
+    appVersion = '0.3.0',
     onClose,
   } = $props<{
     isOpen: boolean;

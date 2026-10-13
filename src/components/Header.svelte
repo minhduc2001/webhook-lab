@@ -8,7 +8,7 @@
     tunnelStatus,
     serverStatus,
     forwarders = [],
-    appVersion = '0.2.0',
+    appVersion = '0.3.0',
     onToggleTunnel,
     onOpenForwarderModal,
     onOpenAboutModal,
