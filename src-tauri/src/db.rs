@@ -50,6 +50,8 @@ pub fn init_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
             matched_rule_id TEXT,
             matched_rule_name TEXT,
             is_simulated_error INTEGER NOT NULL DEFAULT 0,
+            response_headers TEXT,
+            response_body TEXT,
             FOREIGN KEY(endpoint_id) REFERENCES endpoints(id) ON DELETE CASCADE
         )",
         [],
@@ -94,6 +96,8 @@ pub fn init_db<P: AsRef<Path>>(path: P) -> Result<Connection> {
     let _ = conn.execute("ALTER TABLE endpoints ADD COLUMN auto_forward_url TEXT;", []);
     let _ = conn.execute("ALTER TABLE endpoints ADD COLUMN forward_response INTEGER DEFAULT 0;", []);
     let _ = conn.execute("ALTER TABLE requests ADD COLUMN is_simulated_error INTEGER NOT NULL DEFAULT 0;", []);
+    let _ = conn.execute("ALTER TABLE requests ADD COLUMN response_headers TEXT;", []);
+    let _ = conn.execute("ALTER TABLE requests ADD COLUMN response_body TEXT;", []);
 
     // Seed default endpoint if empty
     let count: i64 = conn.query_row("SELECT count(*) FROM endpoints", [], |row| row.get(0))?;
@@ -260,14 +264,34 @@ pub fn delete_endpoint(conn: &Connection, id: &str) -> Result<()> {
 }
 
 pub fn insert_request(conn: &Connection, req: &WebhookRequest) -> Result<()> {
+    insert_request_with(conn, req, "INSERT")?;
+    Ok(())
+}
+
+/// Nhập request từ file; bỏ qua những request trùng id đã có. Trả về số request được thêm.
+pub fn import_requests(conn: &Connection, reqs: &[WebhookRequest]) -> Result<usize> {
+    let tx = conn.unchecked_transaction()?;
+    let mut inserted = 0;
+    for req in reqs {
+        inserted += insert_request_with(&tx, req, "INSERT OR IGNORE")?;
+    }
+    tx.commit()?;
+    Ok(inserted)
+}
+
+fn insert_request_with(conn: &Connection, req: &WebhookRequest, verb: &str) -> Result<usize> {
     let qp_json = serde_json::to_string(&req.query_params).unwrap_or_else(|_| "{}".to_string());
     let headers_json = serde_json::to_string(&req.headers).unwrap_or_else(|_| "{}".to_string());
+    let resp_headers_json = serde_json::to_string(&req.response_headers).unwrap_or_else(|_| "{}".to_string());
 
     conn.execute(
-        "INSERT INTO requests (id, endpoint_id, method, path, query_params, headers, body,
-                               content_type, ip_address, timestamp, response_status,
-                               response_time_ms, matched_rule_id, matched_rule_name, is_simulated_error)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+        &format!(
+            "{verb} INTO requests (id, endpoint_id, method, path, query_params, headers, body,
+                                   content_type, ip_address, timestamp, response_status,
+                                   response_time_ms, matched_rule_id, matched_rule_name, is_simulated_error,
+                                   response_headers, response_body)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)"
+        ),
         params![
             req.id,
             req.endpoint_id,
@@ -284,9 +308,10 @@ pub fn insert_request(conn: &Connection, req: &WebhookRequest) -> Result<()> {
             req.matched_rule_id,
             req.matched_rule_name,
             if req.is_simulated_error { 1 } else { 0 },
+            resp_headers_json,
+            req.response_body,
         ],
-    )?;
-    Ok(())
+    )
 }
 
 pub fn get_requests(conn: &Connection, endpoint_id: Option<&str>, limit: usize) -> Result<Vec<WebhookRequest>> {
@@ -294,7 +319,7 @@ pub fn get_requests(conn: &Connection, endpoint_id: Option<&str>, limit: usize) 
         Some(_) => {
             "SELECT id, endpoint_id, method, path, query_params, headers, body,
                     content_type, ip_address, timestamp, response_status, response_time_ms,
-                    matched_rule_id, matched_rule_name, is_simulated_error
+                    matched_rule_id, matched_rule_name, is_simulated_error, response_headers, response_body
              FROM requests
              WHERE endpoint_id = ?1
              ORDER BY timestamp DESC
@@ -303,7 +328,7 @@ pub fn get_requests(conn: &Connection, endpoint_id: Option<&str>, limit: usize) 
         None => {
             "SELECT id, endpoint_id, method, path, query_params, headers, body,
                     content_type, ip_address, timestamp, response_status, response_time_ms,
-                    matched_rule_id, matched_rule_name, is_simulated_error
+                    matched_rule_id, matched_rule_name, is_simulated_error, response_headers, response_body
              FROM requests
              ORDER BY timestamp DESC
              LIMIT ?1"
@@ -335,6 +360,10 @@ fn map_request_row(row: &rusqlite::Row) -> Result<WebhookRequest> {
     let query_params: HashMap<String, String> = serde_json::from_str(&qp_str).unwrap_or_default();
     let headers: HashMap<String, String> = serde_json::from_str(&hdrs_str).unwrap_or_default();
     let is_simulated_error_int: i32 = row.get(14).unwrap_or(0);
+    let resp_hdrs_str: Option<String> = row.get(15)?;
+    let response_headers: HashMap<String, String> = resp_hdrs_str
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default();
 
     Ok(WebhookRequest {
         id: row.get(0)?,
@@ -352,6 +381,8 @@ fn map_request_row(row: &rusqlite::Row) -> Result<WebhookRequest> {
         matched_rule_id: row.get(12)?,
         matched_rule_name: row.get(13)?,
         is_simulated_error: is_simulated_error_int == 1,
+        response_headers,
+        response_body: row.get(16)?,
     })
 }
 

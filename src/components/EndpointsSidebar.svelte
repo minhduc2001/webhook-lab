@@ -12,6 +12,7 @@
     onOpenEditModal,
     onOpenRulesModal,
     onDeleteEndpoint,
+    onToggleActive,
   } = $props<{
     endpoints: Endpoint[];
     selectedEndpointId: string | null;
@@ -21,6 +22,7 @@
     onOpenEditModal: (ep: Endpoint) => void;
     onOpenRulesModal: (ep: Endpoint) => void;
     onDeleteEndpoint: (id: string) => void;
+    onToggleActive: (ep: Endpoint) => void;
   }>();
 
   let searchQuery = $state('');
@@ -88,6 +90,7 @@
       <div
         class="endpoint-item"
         class:selected={selectedEndpointId === ep.id}
+        class:paused={!ep.is_active}
         onclick={() => onSelectEndpoint(ep.id)}
         role="button"
         tabindex="0"
@@ -96,6 +99,11 @@
         <div class="ep-header-row">
           <span class="ep-name" title={ep.name}>{ep.name}</span>
           <div class="ep-top-badges">
+            {#if !ep.is_active}
+              <span class="paused-badge" title="Đang tạm dừng: request tới sẽ nhận 503 và không được ghi lại">
+                Tạm dừng
+              </span>
+            {/if}
             <span class="status-code-badge" class:error={ep.default_status >= 400}>
               {ep.default_status}
             </span>
@@ -158,6 +166,21 @@
           </div>
 
           <div class="ep-actions-row">
+            <button
+              class="btn-item-action"
+              class:resume={!ep.is_active}
+              onclick={(e) => {
+                e.stopPropagation();
+                onToggleActive(ep);
+              }}
+              title={ep.is_active ? 'Tạm dừng endpoint (trả 503)' : 'Tiếp tục nhận webhook'}
+            >
+              <Icons
+                name={ep.is_active ? 'pause' : 'play'}
+                size={12}
+                color={ep.is_active ? '#94a3b8' : '#34d399'}
+              />
+            </button>
             <button
               class="btn-item-action"
               onclick={(e) => {
@@ -374,6 +397,27 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
+  }
+
+  .endpoint-item.paused .ep-name,
+  .endpoint-item.paused .ep-slug-row,
+  .endpoint-item.paused .ep-indicators {
+    opacity: 0.45;
+  }
+
+  .paused-badge {
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .endpoint-item.paused .ep-actions-row,
+  .btn-item-action.resume {
+    opacity: 1;
   }
 
   .ep-actions-row {

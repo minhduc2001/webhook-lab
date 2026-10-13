@@ -209,7 +209,7 @@
       error_rate_percent: enableChaos ? Number(errorRatePercent) : 0,
       error_status: Number(errorStatus),
       error_body: enableChaos ? errorBody : null,
-      is_active: true,
+      is_active: endpoint ? endpoint.is_active : true,
     });
   }
 </script>

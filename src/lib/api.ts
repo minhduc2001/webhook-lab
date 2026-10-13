@@ -200,6 +200,30 @@ export const api = {
     return true;
   },
 
+  async importRequests(list: WebhookRequest[]): Promise<number> {
+    if (tauriInvoke) {
+      return await tauriInvoke('import_requests', { requests: list });
+    }
+    const existing = new Set(mockRequests.map((r) => r.id));
+    const fresh = list.filter((r) => !existing.has(r.id));
+    mockRequests = [...fresh, ...mockRequests].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    return fresh.length;
+  },
+
+  // Lưu file xuất; trả về đường dẫn (Tauri) hoặc tên file đã tải (trình duyệt)
+  async exportFile(fileName: string, contents: string): Promise<string> {
+    if (tauriInvoke) {
+      return await tauriInvoke('export_file', { fileName, contents });
+    }
+    const url = URL.createObjectURL(new Blob([contents], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return fileName;
+  },
+
   async getRules(endpointId: string): Promise<ResponseRule[]> {
     if (tauriInvoke) {
       return await tauriInvoke('get_rules', { endpointId });
@@ -427,6 +451,8 @@ export const api = {
       timestamp: new Date().toISOString(),
       response_status: ep.default_status,
       response_time_ms: 6,
+      response_headers: { ...ep.default_headers },
+      response_body: ep.default_body,
     };
 
     mockRequests = [testReq, ...mockRequests];

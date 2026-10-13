@@ -36,6 +36,8 @@ export interface WebhookRequest {
   matched_rule_id?: string | null;
   matched_rule_name?: string | null;
   is_simulated_error?: boolean;
+  response_headers?: Record<string, string>;
+  response_body?: string | null;
 }
 
 export type ConditionType = 'header' | 'path' | 'query' | 'json_body' | 'method';

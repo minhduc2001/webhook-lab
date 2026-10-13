@@ -12,6 +12,9 @@
   import InstallTunnelModal from './components/InstallTunnelModal.svelte';
   import ApiForwarderModal from './components/ApiForwarderModal.svelte';
   import AboutModal from './components/AboutModal.svelte';
+  import DiffModal from './components/DiffModal.svelte';
+  import ShortcutsHelp from './components/ShortcutsHelp.svelte';
+  import { toHar, toJsonExport, parseImport, exportFileName, type ExportFormat } from './lib/transfer';
 
   // Core application state
   let endpoints = $state<Endpoint[]>([]);
@@ -54,6 +57,21 @@
   let isReplayModalOpen = $state(false);
   let replayTargetRequest = $state<WebhookRequest | null>(null);
 
+  // So sánh 2 request: chọn A (compareBaseId) rồi chọn B trong danh sách
+  let compareBaseId = $state<string | null>(null);
+  let diffPair = $state<{ a: WebhookRequest; b: WebhookRequest } | null>(null);
+
+  let isShortcutsOpen = $state(false);
+
+  let toast = $state<{ text: string; isError?: boolean } | null>(null);
+  let toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function showToast(text: string, isError = false) {
+    toast = { text, isError };
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (toast = null), isError ? 6000 : 4000);
+  }
+
   // Derived filtered requests based on selected endpoint
   let displayedRequests = $derived(
     selectedEndpointId
@@ -65,11 +83,25 @@
     requests.find((r) => r.id === selectedRequestId) || null
   );
 
+  let compareBase = $derived(requests.find((r) => r.id === compareBaseId) || null);
+
+  let anyModalOpen = $derived(
+    isEndpointModalOpen ||
+      isRulesModalOpen ||
+      isReplayModalOpen ||
+      isInstallModalOpen ||
+      isForwarderModalOpen ||
+      isAboutModalOpen ||
+      isShortcutsOpen ||
+      diffPair !== null
+  );
+
   onMount(() => {
     loadInitialData();
 
     // Listen for live incoming webhooks from Rust backend
     const unlistenRequests = api.onRequestReceived((newReq) => {
+      if (requests.some((r) => r.id === newReq.id)) return;
       requests = [newReq, ...requests];
 
       // Update endpoint request count
@@ -288,6 +320,26 @@
     }
   }
 
+  async function handleToggleEndpointActive(ep: Endpoint) {
+    const nextActive = !ep.is_active;
+    try {
+      const updated = await api.updateEndpoint({ ...ep, is_active: nextActive });
+      // Lệnh cập nhật không trả về request_count / created_at gốc nên giữ lại giá trị cũ
+      endpoints = endpoints.map((e) =>
+        e.id === ep.id
+          ? { ...e, ...updated, request_count: e.request_count, created_at: e.created_at }
+          : e
+      );
+      showToast(
+        nextActive
+          ? `Đã bật lại "${ep.name}"`
+          : `Đã tạm dừng "${ep.name}": request tới sẽ nhận 503 (Retry-After: 60s)`
+      );
+    } catch (err: any) {
+      showToast(`Không đổi được trạng thái endpoint: ${err?.message ?? err}`, true);
+    }
+  }
+
   // Rules management
   async function openRulesModal(ep: Endpoint, prefill?: Partial<ResponseRule>) {
     activeRulesEndpoint = ep;
@@ -387,10 +439,102 @@
   }
 
   async function handleDeleteRequest(id: string) {
+    // Chọn request kế bên trong danh sách đang hiển thị thay vì nhảy về đầu
+    const idx = displayedRequests.findIndex((r) => r.id === id);
+    const neighbor = displayedRequests[idx + 1] ?? displayedRequests[idx - 1] ?? null;
+
     await api.deleteRequest(id);
     requests = requests.filter((r) => r.id !== id);
+    if (compareBaseId === id) compareBaseId = null;
     if (selectedRequestId === id) {
-      selectedRequestId = requests.length > 0 ? requests[0].id : null;
+      selectedRequestId = neighbor?.id ?? null;
+    }
+  }
+
+  function handleSelectRequest(id: string) {
+    if (compareBaseId && id !== compareBaseId) {
+      const a = requests.find((r) => r.id === compareBaseId);
+      const b = requests.find((r) => r.id === id);
+      compareBaseId = null;
+      if (a && b) diffPair = { a, b };
+      return;
+    }
+    selectedRequestId = id;
+  }
+
+  function handleStartCompare(req: WebhookRequest) {
+    compareBaseId = compareBaseId === req.id ? null : req.id;
+  }
+
+  async function handleExport(format: ExportFormat, list: WebhookRequest[]) {
+    const scope = endpoints.find((e) => e.id === selectedEndpointId)?.slug ?? 'all';
+    const contents =
+      format === 'har'
+        ? toHar(list, serverStatus.local_base_url, appVersion)
+        : toJsonExport(list, appVersion);
+    try {
+      const savedTo = await api.exportFile(exportFileName(scope, format), contents);
+      showToast(`Đã xuất ${list.length} request → ${savedTo}`);
+    } catch (err: any) {
+      showToast(`Không xuất được file: ${err?.message ?? err}`, true);
+    }
+  }
+
+  async function handleImport(fileText: string) {
+    try {
+      const fallbackEndpoint = selectedEndpointId ?? endpoints[0]?.id;
+      if (!fallbackEndpoint) throw new Error('Chưa có endpoint nào để gắn request vào');
+      const knownIds = new Set(endpoints.map((e) => e.id));
+      // Request của endpoint không tồn tại trên máy này được gắn vào endpoint đang chọn
+      const list = parseImport(fileText).map((r) =>
+        knownIds.has(r.endpoint_id) ? r : { ...r, endpoint_id: fallbackEndpoint }
+      );
+      const added = await api.importRequests(list);
+      const [reqs, eps] = await Promise.all([api.getRequests(), api.getEndpoints()]);
+      requests = reqs;
+      endpoints = eps;
+      const skipped = list.length - added;
+      showToast(`Đã nhập ${added} request${skipped > 0 ? ` (bỏ qua ${skipped} trùng)` : ''}`);
+    } catch (err: any) {
+      showToast(`Không nhập được: ${err?.message ?? err}`, true);
+    }
+  }
+
+  // Phím tắt toàn cục (điều hướng danh sách nằm trong RequestsList)
+  function handleGlobalKeydown(e: KeyboardEvent) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+    if (e.key === 'Escape' && compareBaseId) {
+      compareBaseId = null;
+      return;
+    }
+    if (e.key === '?') {
+      isShortcutsOpen = !isShortcutsOpen;
+      return;
+    }
+    if (anyModalOpen) return;
+
+    if (e.key === 'p') {
+      const ep = endpoints.find((x) => x.id === selectedEndpointId);
+      if (ep) {
+        e.preventDefault();
+        handleToggleEndpointActive(ep);
+      }
+      return;
+    }
+    if (!activeRequest) return;
+
+    if (e.key === 'r') {
+      e.preventDefault();
+      handleOpenReplay(activeRequest);
+    } else if (e.key === 'Delete') {
+      e.preventDefault();
+      handleDeleteRequest(activeRequest.id);
+    } else if (e.key === 'd') {
+      e.preventDefault();
+      handleStartCompare(activeRequest);
     }
   }
 
@@ -403,6 +547,9 @@
     const targetEpId = selectedEndpointId || (endpoints[0]?.id ?? 'ep-default');
     try {
       const testReq = await api.sendTestWebhook(targetEpId, preset);
+      if (!requests.some((r) => r.id === testReq.id)) {
+        requests = [testReq, ...requests];
+      }
       selectedRequestId = testReq.id;
     } catch (err) {
       console.error('Failed to send test webhook:', err);
@@ -489,6 +636,8 @@
   }
 </script>
 
+<svelte:window onkeydown={handleGlobalKeydown} />
+
 <div class="app-container">
   <!-- Top App Navigation & Quick Tunnel Bar -->
   <Header
@@ -520,6 +669,7 @@
         onOpenEditModal={openEditEndpointModal}
         onOpenRulesModal={(ep) => openRulesModal(ep)}
         onDeleteEndpoint={handleDeleteEndpoint}
+        onToggleActive={handleToggleEndpointActive}
       />
     </div>
 
@@ -540,8 +690,13 @@
       <RequestsList
         requests={displayedRequests}
         {selectedRequestId}
-        onSelectRequest={(id) => (selectedRequestId = id)}
+        onSelectRequest={handleSelectRequest}
         onDeleteRequest={handleDeleteRequest}
+        {compareBase}
+        onCancelCompare={() => (compareBaseId = null)}
+        onExport={handleExport}
+        onImport={handleImport}
+        keyboardEnabled={!anyModalOpen && !compareBaseId}
       />
     </div>
 
@@ -565,6 +720,8 @@
         onOpenReplay={handleOpenReplay}
         onCreateRuleFromRequest={handleCreateRuleFromRequest}
         onDeleteRequest={handleDeleteRequest}
+        onStartCompare={handleStartCompare}
+        isComparing={compareBaseId !== null && compareBaseId === activeRequest?.id}
       />
     </div>
   </main>
@@ -621,4 +778,60 @@
     {appVersion}
     onClose={() => (isAboutModalOpen = false)}
   />
+
+  {#if diffPair}
+    <DiffModal
+      a={diffPair.a}
+      b={diffPair.b}
+      onClose={() => (diffPair = null)}
+      onSwap={() => diffPair && (diffPair = { a: diffPair.b, b: diffPair.a })}
+    />
+  {/if}
+
+  {#if isShortcutsOpen}
+    <ShortcutsHelp onClose={() => (isShortcutsOpen = false)} />
+  {/if}
+
+  {#if toast}
+    <div class="toast" class:error={toast.isError} role="status">
+      <span>{toast.text}</span>
+      <button onclick={() => (toast = null)} aria-label="Đóng">×</button>
+    </div>
+  {/if}
 </div>
+
+<style>
+  .toast {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 200;
+    max-width: min(520px, calc(100vw - 32px));
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    color: var(--text-main);
+    background: var(--bg-card);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 6px;
+    box-shadow: var(--shadow-lg);
+    word-break: break-all;
+    animation: modal-enter 0.18s ease-out;
+  }
+
+  .toast.error {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+  }
+
+  .toast button {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+  }
+</style>

@@ -1,16 +1,19 @@
 <script lang="ts">
   import type { WebhookRequest, TunnelStatus } from '../types';
   import {
-    formatJson,
     generateCurl,
     generateFetchCode,
     copyToClipboard,
     getMethodColor,
     getStatusColor,
-    formatTime,
+    formatDateTime,
+    formatTimeAgo,
     formatBytes,
+    byteLength,
   } from '../lib/utils';
   import Icons from './Icons.svelte';
+  import BodyViewer from './BodyViewer.svelte';
+  import SignaturePanel from './SignaturePanel.svelte';
 
   let {
     request,
@@ -18,19 +21,28 @@
     onOpenReplay,
     onCreateRuleFromRequest,
     onDeleteRequest,
+    onStartCompare,
+    isComparing = false,
   } = $props<{
     request: WebhookRequest | null;
     tunnelStatus: TunnelStatus;
     onOpenReplay: (req: WebhookRequest) => void;
     onCreateRuleFromRequest: (req: WebhookRequest) => void;
     onDeleteRequest: (id: string) => void;
+    onStartCompare: (req: WebhookRequest) => void;
+    isComparing?: boolean;
   }>();
 
   let activeTab = $state<'body' | 'headers' | 'query' | 'response' | 'overview' | 'code'>('body');
-  let isRawBody = $state(false);
   let copiedCurl = $state(false);
-  let copiedBody = $state(false);
+  let copiedFetch = $state(false);
   let copiedHeaderKey = $state<string | null>(null);
+  let now = $state(Date.now());
+
+  $effect(() => {
+    const timer = setInterval(() => (now = Date.now()), 15000);
+    return () => clearInterval(timer);
+  });
 
   let activeBaseUrl = $derived(
     tunnelStatus.is_running && tunnelStatus.public_url
@@ -38,9 +50,7 @@
       : 'http://localhost:4567'
   );
 
-  let formattedBody = $derived(
-    request ? formatJson(request.body) : { formatted: '', isValid: false }
-  );
+  let bodyBytes = $derived(request ? byteLength(request.body) : 0);
 
   let curlCode = $derived(
     request ? generateCurl(request, activeBaseUrl) : ''
@@ -59,13 +69,18 @@
     }
   }
 
-  async function handleCopyBody() {
-    if (!request) return;
-    const ok = await copyToClipboard(request.body);
+  async function handleCopyFetch() {
+    if (!fetchCode) return;
+    const ok = await copyToClipboard(fetchCode);
     if (ok) {
-      copiedBody = true;
-      setTimeout(() => (copiedBody = false), 2000);
+      copiedFetch = true;
+      setTimeout(() => (copiedFetch = false), 2000);
     }
+  }
+
+  function responseContentType(req: WebhookRequest): string {
+    const entry = Object.entries(req.response_headers ?? {}).find(([k]) => k.toLowerCase() === 'content-type');
+    return entry?.[1] ?? '';
   }
 
   async function handleCopyHeader(key: string, val: any) {
@@ -106,9 +121,14 @@
         >
           {request.response_status}
         </span>
-        <span class="detail-meta-chip">
-          <Icons name="clock" size={11} />
+        <span class="detail-meta-chip" title="Thời gian xử lý">
+          <Icons name="zap" size={11} />
           {request.response_time_ms}ms
+        </span>
+        <span class="detail-meta-chip received" title={`Nhận lúc ${formatDateTime(request.timestamp)} (${request.timestamp})`}>
+          <Icons name="clock" size={11} />
+          {formatDateTime(request.timestamp, false)}
+          <span class="received-ago">· {formatTimeAgo(request.timestamp, now)}</span>
         </span>
       </div>
 
@@ -141,6 +161,16 @@
         </button>
 
         <button
+          class="btn-secondary"
+          class:active-toggle={isComparing}
+          onclick={() => onStartCompare(request)}
+          title="So sánh với request khác (chọn request thứ hai trong danh sách)"
+        >
+          <Icons name="diff" size={12} />
+          <span>So sánh</span>
+        </button>
+
+        <button
           class="btn-secondary danger"
           onclick={() => onDeleteRequest(request.id)}
           title="Xóa request này"
@@ -157,7 +187,7 @@
         class:active={activeTab === 'body'}
         onclick={() => (activeTab = 'body')}
       >
-        Body ({formatBytes(request.body.length)})
+        Body ({formatBytes(bodyBytes)})
       </button>
       <button
         class="tab-btn"
@@ -199,39 +229,15 @@
     <!-- Tab Contents -->
     <div class="detail-content">
       {#if activeTab === 'body'}
-        <div class="body-tab-container">
-          <div class="tab-toolbar">
-            <div class="tab-toolbar-left">
-              <span class="content-type-badge">{request.content_type || 'text/plain'}</span>
-              {#if formattedBody.isValid}
-                <span class="json-valid-badge">JSON Hợp Lệ</span>
-              {/if}
-            </div>
-            <div class="tab-toolbar-right">
-              {#if formattedBody.isValid}
-                <button
-                  class="btn-toggle-raw"
-                  onclick={() => (isRawBody = !isRawBody)}
-                >
-                  {isRawBody ? 'Định dạng đẹp' : 'Dạng gốc (Raw)'}
-                </button>
-              {/if}
-              <button class="btn-copy-toolbar" onclick={handleCopyBody}>
-                <Icons name={copiedBody ? 'check' : 'copy'} size={12} />
-                <span>{copiedBody ? 'Đã sao chép' : 'Sao chép'}</span>
-              </button>
-            </div>
-          </div>
-
-          {#if !request.body}
-            <div class="empty-inline">&lt;Request Không Có Nội Dung Body&gt;</div>
-          {:else}
-            <pre class="code-box"><code>{isRawBody || !formattedBody.isValid ? request.body : formattedBody.formatted}</code></pre>
-          {/if}
-        </div>
+        {#key request.id}
+          <BodyViewer body={request.body} contentType={request.content_type} emptyText="<Request không có body>" />
+        {/key}
 
       {:else if activeTab === 'headers'}
         <div class="headers-tab-container">
+          {#key request.id}
+            <SignaturePanel {request} />
+          {/key}
           <table class="headers-table">
             <thead>
               <tr>
@@ -311,7 +317,7 @@
               </span>
             </div>
             <div class="resp-item">
-              <span class="resp-label">Thời Gian Xử Lý</span>
+              <span class="resp-label">Time</span>
               <span class="resp-value">{request.response_time_ms} ms</span>
             </div>
             <div class="resp-item">
@@ -325,13 +331,41 @@
               </span>
             </div>
           </div>
+
+          {#if request.response_body == null}
+            <div class="empty-inline">Request này được ghi nhận trước khi app lưu nội dung phản hồi.</div>
+          {:else}
+            {@const respHeaders = Object.entries(request.response_headers ?? {})}
+            {#if respHeaders.length > 0}
+              <div class="section-label">Headers phản hồi ({respHeaders.length})</div>
+              <table class="headers-table">
+                <tbody>
+                  {#each respHeaders as [key, val]}
+                    <tr>
+                      <td class="header-key" style="width: 32%;">{key}</td>
+                      <td class="header-val">{val}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            {/if}
+            <div class="section-label">Body phản hồi</div>
+            {#key request.id}
+              <BodyViewer
+                body={request.response_body}
+                contentType={responseContentType(request)}
+                emptyText="<Phản hồi không có body>"
+              />
+            {/key}
+          {/if}
         </div>
 
       {:else if activeTab === 'overview'}
         <div class="overview-grid">
           <div class="overview-card">
-            <span class="card-label">Thời Điểm Nhận</span>
-            <span class="card-val">{formatTime(request.timestamp)} ({request.timestamp})</span>
+            <span class="card-label">Received</span>
+            <span class="card-val">{formatDateTime(request.timestamp)} · {formatTimeAgo(request.timestamp, now)}</span>
+            <span class="card-sub mono">{request.timestamp}</span>
           </div>
           <div class="overview-card">
             <span class="card-label">Địa Chỉ IP Người Gửi</span>
@@ -339,7 +373,7 @@
           </div>
           <div class="overview-card">
             <span class="card-label">Kích Thước Dữ Liệu</span>
-            <span class="card-val">{formatBytes(request.body.length)} ({request.body.length} bytes)</span>
+            <span class="card-val">{formatBytes(bodyBytes)} ({bodyBytes} bytes)</span>
           </div>
           <div class="overview-card">
             <span class="card-label">Mã Request ID</span>
@@ -363,14 +397,9 @@
           <div class="snippet-block">
             <div class="snippet-header">
               <span>Mã Nguồn JavaScript (Fetch API)</span>
-              <button
-                class="btn-copy-toolbar"
-                onclick={async () => {
-                  await copyToClipboard(fetchCode);
-                }}
-              >
-                <Icons name="copy" size={12} />
-                <span>Sao chép</span>
+              <button class="btn-copy-toolbar" onclick={handleCopyFetch}>
+                <Icons name={copiedFetch ? 'check' : 'copy'} size={12} />
+                <span>{copiedFetch ? 'Đã sao chép' : 'Sao chép'}</span>
               </button>
             </div>
             <pre class="code-box"><code>{fetchCode}</code></pre>
@@ -394,55 +423,37 @@
     border-radius: 4px;
   }
 
-  .tab-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
+  .detail-meta-chip.received {
+    color: #a5b4fc;
+    background: rgba(99, 102, 241, 0.1);
+    white-space: nowrap;
   }
 
-  .tab-toolbar-left, .tab-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .received-ago {
+    color: var(--text-dim);
   }
 
-  .content-type-badge {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    background: rgba(255, 255, 255, 0.06);
-    padding: 2px 6px;
-    border-radius: 4px;
-    color: var(--text-muted);
-  }
-
-  .json-valid-badge {
+  .section-label {
+    margin: 12px 0 6px;
     font-size: 10px;
     font-weight: 600;
-    color: #34d399;
-    background: rgba(16, 185, 129, 0.12);
-    border: 1px solid rgba(16, 185, 129, 0.25);
-    padding: 1px 6px;
-    border-radius: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
   }
 
-  .btn-toggle-raw, .btn-copy-toolbar {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-subtle);
-    border-radius: 4px;
-    padding: 3px 8px;
-    color: var(--text-muted);
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.12s;
+  .btn-secondary.active-toggle {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: #93c5fd;
   }
 
-  .btn-toggle-raw:hover, .btn-copy-toolbar:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-main);
+  .card-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .card-sub.mono {
+    font-family: var(--font-mono);
   }
 
   .btn-copy-sm {
@@ -455,16 +466,6 @@
 
   .btn-copy-sm:hover {
     background: rgba(255, 255, 255, 0.1);
-  }
-
-  .empty-inline {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
   }
 
   .response-summary-card {

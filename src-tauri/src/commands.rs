@@ -8,7 +8,7 @@ use crate::tunnel::{ApiForwarderManager, TunnelManager};
 use rusqlite::Connection;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 pub struct AppState {
     pub db: Arc<Mutex<Connection>>,
@@ -285,19 +285,25 @@ pub async fn get_server_status(state: State<'_, AppState>) -> Result<ServerStatu
 
 #[tauri::command]
 pub async fn send_test_webhook(
+    app: AppHandle,
     state: State<'_, AppState>,
     endpoint_id: String,
     preset: String,
 ) -> Result<WebhookRequest, String> {
-    let (slug, default_status) = {
+    let ep = {
         let conn = state.db.lock().map_err(|e| e.to_string())?;
         let endpoints = db::get_endpoints(&conn).map_err(|e| e.to_string())?;
-        let ep = endpoints
+        endpoints
             .into_iter()
             .find(|e| e.id == endpoint_id)
-            .ok_or_else(|| "Endpoint not found".to_string())?;
-        (ep.slug, ep.default_status)
+            .ok_or_else(|| "Endpoint not found".to_string())?
     };
+    let slug = ep.slug.clone();
+    let default_status = ep.default_status;
+    let mut response_headers = ep.default_headers.clone();
+    if !response_headers.keys().any(|k| k.eq_ignore_ascii_case("content-type")) {
+        response_headers.insert("Content-Type".to_string(), ep.default_content_type.clone());
+    }
 
     let mut headers = HashMap::new();
     headers.insert("content-type".to_string(), "application/json".to_string());
@@ -363,6 +369,8 @@ pub async fn send_test_webhook(
         matched_rule_id: None,
         matched_rule_name: None,
         is_simulated_error: false,
+        response_headers,
+        response_body: Some(ep.default_body.clone()),
     };
 
     {
@@ -370,10 +378,40 @@ pub async fn send_test_webhook(
         db::insert_request(&conn, &test_req).map_err(|e| e.to_string())?;
     }
 
+    // Phát sự kiện để request test hiện ngay trong danh sách
+    let _ = app.emit("request_received", test_req.clone());
+
     Ok(test_req)
 }
 
 #[tauri::command]
 pub fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[tauri::command]
+pub async fn import_requests(
+    state: State<'_, AppState>,
+    requests: Vec<WebhookRequest>,
+) -> Result<usize, String> {
+    let conn = state.db.lock().map_err(|e| e.to_string())?;
+    db::import_requests(&conn, &requests).map_err(|e| e.to_string())
+}
+
+/// Ghi file xuất ra thư mục Downloads và trả về đường dẫn đầy đủ
+#[tauri::command]
+pub async fn export_file(app: AppHandle, file_name: String, contents: String) -> Result<String, String> {
+    let safe_name: String = file_name
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() || "-_.".contains(c) { c } else { '_' })
+        .collect();
+    let dir = app
+        .path()
+        .download_dir()
+        .or_else(|_| app.path().document_dir())
+        .map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let path = dir.join(safe_name);
+    std::fs::write(&path, contents).map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().to_string())
 }

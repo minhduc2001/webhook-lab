@@ -117,6 +117,10 @@ pub struct WebhookRequest {
     pub matched_rule_name: Option<String>,
     #[serde(default)]
     pub is_simulated_error: bool,
+    #[serde(default)]
+    pub response_headers: HashMap<String, String>,
+    #[serde(default)]
+    pub response_body: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -89,6 +89,8 @@ pub fn run() {
             get_server_status,
             send_test_webhook,
             get_app_version,
+            import_requests,
+            export_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");

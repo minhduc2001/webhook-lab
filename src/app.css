@@ -832,3 +832,80 @@ body {
   justify-content: center;
   color: var(--text-muted);
 }
+
+/* Tô sáng kết quả tìm kiếm trong body */
+mark.hl {
+  background: rgba(250, 204, 21, 0.28);
+  color: inherit;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.35);
+}
+
+mark.hl.current {
+  background: rgba(249, 115, 22, 0.55);
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.9);
+}
+
+/* Thanh công cụ của khung xem body (dùng chung) */
+.tab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-toolbar-left, .tab-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.content-type-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.json-valid-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.btn-toggle-raw, .btn-copy-toolbar {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 3px 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s;
+}
+
+.btn-toggle-raw:hover, .btn-copy-toolbar:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.empty-inline {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}

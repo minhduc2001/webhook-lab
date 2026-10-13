@@ -156,7 +156,8 @@ async fn handle_webhook(
         return Response::builder()
             .status(StatusCode::SERVICE_UNAVAILABLE)
             .header("Content-Type", "application/json")
-            .body(r#"{"error": "Endpoint is currently disabled"}"#.to_string())
+            .header("Retry-After", "60")
+            .body(r#"{"error": "Endpoint is paused", "hint": "Resume it in Webhook Lab"}"#.to_string())
             .unwrap();
     }
 
@@ -231,6 +232,12 @@ async fn handle_webhook(
             let red_status = endpoint.redirect_status.unwrap_or(302);
             let elapsed = start_time.elapsed().as_millis() as u64;
 
+            let redirect_body = format!("Redirecting to {}", redirect_target);
+            let redirect_headers = HashMap::from([
+                ("Location".to_string(), redirect_target.clone()),
+                ("Content-Type".to_string(), "text/plain".to_string()),
+            ]);
+
             let request_id = format!("req-{}", uuid::Uuid::new_v4().simple());
             let req_record = WebhookRequest {
                 id: request_id,
@@ -248,6 +255,8 @@ async fn handle_webhook(
                 matched_rule_id: None,
                 matched_rule_name: Some("HTTP Redirect".to_string()),
                 is_simulated_error: false,
+                response_headers: redirect_headers,
+                response_body: Some(redirect_body.clone()),
             };
 
             {
@@ -261,7 +270,7 @@ async fn handle_webhook(
                 .status(red_status)
                 .header("Location", redirect_target)
                 .header("Content-Type", "text/plain")
-                .body(format!("Redirecting to {}", redirect_target))
+                .body(redirect_body)
                 .unwrap();
         }
     }
@@ -328,6 +337,15 @@ async fn handle_webhook(
 
     let elapsed = start_time.elapsed().as_millis() as u64;
 
+    // Headers phản hồi thực tế (lưu lại để xem trong tab Phản Hồi)
+    let mut final_headers = resp_headers;
+    if is_simulated_error {
+        final_headers.insert("X-Simulated-Error".to_string(), "true".to_string());
+    }
+    if !final_headers.keys().any(|k| k.eq_ignore_ascii_case("content-type")) {
+        final_headers.insert("Content-Type".to_string(), endpoint.default_content_type.clone());
+    }
+
     // Save request to database
     let request_id = format!("req-{}", uuid::Uuid::new_v4().simple());
     let req_record = WebhookRequest {
@@ -346,6 +364,8 @@ async fn handle_webhook(
         matched_rule_id: matched_rule.as_ref().map(|r| r.id.clone()),
         matched_rule_name: matched_rule.as_ref().map(|r| r.name.clone()),
         is_simulated_error,
+        response_headers: final_headers.clone(),
+        response_body: Some(resp_body.clone()),
     };
 
     {
@@ -358,14 +378,8 @@ async fn handle_webhook(
 
     // Build HTTP Response
     let mut builder = Response::builder().status(status_code);
-    for (k, v) in &resp_headers {
+    for (k, v) in &final_headers {
         builder = builder.header(k, v);
-    }
-    if is_simulated_error {
-        builder = builder.header("X-Simulated-Error", "true");
-    }
-    if !resp_headers.contains_key("content-type") && !resp_headers.contains_key("Content-Type") {
-        builder = builder.header("Content-Type", &endpoint.default_content_type);
     }
 
     builder.body(resp_body).unwrap_or_else(|_| {
